@@ -17,9 +17,9 @@ Technically, you could run this project outside a Docker container but the proje
 
 ## ℹ️ Usage
 
-An example with the Terraform project in `./test`. Feel free to `terraform apply` before or after running the Docker container, both will work.
+An example with the Terraform project in `./test`. Feel free to **`terraform apply`** before or after running the Docker container, both will work.
 
-The Terraform project directory must be bound at **`/tf`** inside the container (like below).
+The Terraform project directory must be bound at `/tf` inside the container (like below).
 
 ```bash
 docker run \
@@ -31,17 +31,11 @@ docker run \
     b0thr34l/dockerdoom:1.0
 ```
 
-Now you can play DOOM through a VNC client. 
-Example with `vnclient`:
+Now you can play DOOM through a VNC client. Example with `vnclient`:
 
 ```bash
 vncviewer viewer localhost:5900
 ```
-## 🔩 Controls
-
-There are the main DOOM in-game controls:
-- **`Move`**: Arrows
-- **`Fire`**: Ctrl
 
 ## 🔎 Cheat codes
 
