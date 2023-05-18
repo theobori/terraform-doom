@@ -6,13 +6,6 @@ This is a Rust fork of [kubedoom](https://github.com/storax/kubedoom), forked fr
 
 Technically, you could run this project outside a Docker container but the project was especially designed to run in one
 
-## 📖 How to build and run ?
-
-1. Install the system dependencies
-    - `docker`
-
-## 🖼️ Screenshot
-
 ![In game](./assets/in-game.png)
 
 ## ℹ️ Usage
