@@ -1,62 +1,16 @@
 use std::collections::VecDeque;
-use std::{env, fs};
+use std::env;
+use std::{thread, time};
 use std::io::{Error, Read, Write};
 use std::os::unix::net::{UnixStream, UnixListener};
 use std::path::Path;
 use std::process::Stdio;
 
-use structopt::StructOpt;
 use execute::{Execute, shell};
-use uuid::Uuid;
 
 pub const TF_PREFIX: &str = "TF_";
-pub const DOOM_IMAGE: &str = "b0thr34l/dockerdoomd";
-pub const SOCKET_PATH: &str = "/tmp/dockerdoomd.socket";
-pub const PORT: usize = 5900;
-
-#[derive(StructOpt, Debug)]
-#[structopt(name = "tf-doom")]
-/// Managing CLI arguments
-struct Opt {
-    /// Change project directory
-    #[structopt(short, long)]
-    chdir: Option<String>,
-    /// VNC bound port
-    #[structopt(short, long)]
-    port: Option<usize>,
-}
-
-impl Opt {
-    /// Return the interpreter
-    pub fn chdir(&self) -> String {
-        self.chdir
-            .clone()
-            .unwrap_or(String::from("."))
-    }
-
-    /// Return VNC port
-    pub fn port(&self) -> usize {
-        self.port
-            .clone()
-            .unwrap_or(PORT)
-    }
-}
-
-/// Docker utilities
-pub struct Docker;
-
-impl Docker {
-    pub fn command(args: &[&str]) -> Result<(), Error> {
-        let cmd = format!(
-            "docker {}",
-            args.join(" ")
-        );
-    
-        shell(cmd).spawn()?;
-
-        Ok(())
-    }
-}
+pub const CHDIR: &str = "/tf";
+pub const SOCKET_PATH: &str = "/dockerdoom.socket";
 
 /// Terraform DOOM controller
 /// 
@@ -65,35 +19,22 @@ pub struct TfDoom {
     /// Terraform commmon/base command expr
     base: String,
     /// UNIX listener
-    stream: UnixListener,
-    /// Socket path
-    socket: String,
-    /// Container name, used on the Drop impl
-    container_name: String
+    stream: UnixListener
 }
 
 impl TfDoom {
     pub fn new<T: AsRef<Path>>(base: &str, socket_path: T) -> Self {
-        // Create the socket
         let socket = socket_path.as_ref();
-
-        if socket.exists() {
-            fs::remove_file(socket).unwrap();
-        }
     
         // Bind to socket
         let stream = match UnixListener::bind(socket) {
             Err(_) => panic!("failed to bind socket"),
             Ok(stream) => stream,
         };
-        let container_name = Uuid::new_v4().to_string();
-
 
         Self {
             base: String::from(base),
-            stream,
-            socket: socket.to_string_lossy().to_string(),
-            container_name
+            stream
         }
     }
 
@@ -144,25 +85,6 @@ impl TfDoom {
             .expect("Unable to run terraform destroy");
     }
 
-    /// Run DOOM as Docker container
-    pub fn run_doom(&self, port: usize) -> Result<(), Error> {
-        Docker::command(&[
-            "run",
-            "--rm=true",
-            &format!("--name=\"{}\"", self.container_name),
-            &format!("-p {}:{}", port, 5900),
-            &format!("-v {}:/dockerdoom.socket", self.socket),
-            "doomvnc",
-            "x11vnc",
-            "-geometry 1280x960",
-            "-forever",
-            "-usepw",
-            "-create"
-        ])?;
-
-        Ok(())
-    }
-
     /// get the Terraform resources list 
     /// then send it back to the client
     fn doom_list(&self, stream: &mut UnixStream) {
@@ -190,8 +112,6 @@ impl TfDoom {
     }
 
     /// Handle a client connection
-    /// 
-    /// Here it is supposed to be the DOOM Docker container
     fn handle_client(&self, stream: &mut UnixStream) {
         let mut buffer = [0; 255];
 
@@ -240,7 +160,6 @@ impl TfDoom {
                 },
                 Err(err) => {
                     panic!("{}", err.to_string());
-                    break;
                 }
             }
         }
@@ -248,14 +167,14 @@ impl TfDoom {
 }
 
 /// Returns the base command for terraform operations
-fn base_command(args: &Opt) -> String {
+fn base_command() -> String {
     // Terraform environment vars
     let tf_vars: Vec<String> = env::vars()
         .filter(| (k, _) | k.starts_with(TF_PREFIX))
         .map(| (k, v) | format!("{}={}", k, v))
         .collect();
 
-    let chdir = format!("-chdir={}", args.chdir());
+    let chdir = format!("-chdir={}", CHDIR);
     let mut base = String::new();
     
     if tf_vars.len() > 0 {
@@ -269,13 +188,25 @@ fn base_command(args: &Opt) -> String {
     base
 }
 
-fn main() -> Result<(), Error>{
-    let args = Opt::from_args();
-    let base = base_command(&args);
+fn main() -> Result<(), Error> {
+    let base = base_command();
 
     let mut tfdoom = TfDoom::new(&base, SOCKET_PATH);
 
-    tfdoom.run_doom(args.port())?;
+    shell("/usr/bin/Xvfb :99 -ac -screen 0 640x480x24")
+        .spawn()
+        .expect("Unable to start the virtual X session");
+
+    thread::sleep(time::Duration::from_secs(2));
+
+    shell("x11vnc -geometry 640x480 -forever -usepw -create -display :99")
+        .spawn()
+        .expect("Unable to start the VNC server");
+
+    shell("/usr/bin/env DISPLAY=:99 /usr/local/games/psdoom -warp -E1M1 -nomouse -iwad /doom1.wad")
+        .spawn()
+        .expect("Run DOOM");
+
     tfdoom.send_resources();
 
     Ok(())
