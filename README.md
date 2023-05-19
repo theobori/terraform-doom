@@ -1,4 +1,4 @@
-# 💜 tf-doom
+# ❤️‍🔥 tf-doom
 
 Entertaining Terraform chaos engineering, destroy resource by killing DOOM ennemies.
 
