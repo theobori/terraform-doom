@@ -63,7 +63,13 @@ impl TfDoom {
                 return output
                     .split('\n')
                     .filter(| value | value.len() > 0)
-                    .map(| value | format!("{}\n", value))
+                    .map(
+                        | value | {
+                            format!(
+                                "{}\n",
+                                value.replace("\"", "\'")
+                            )
+                        })
                     .collect();
             },
             None => Vec::new()
@@ -72,12 +78,12 @@ impl TfDoom {
 
     /// Destroy a Terraform resource
     pub fn tf_destroy(&self, name: &str) {
+        let name = name.replace("\'", "\\\"");
         let cmd = format!(
             "{} destroy -auto-approve -target {}",
             self.base,
             name
         );
-
         let mut command = shell(cmd);
 
         command
@@ -85,7 +91,7 @@ impl TfDoom {
             .expect("Unable to run terraform destroy");
     }
 
-    /// get the Terraform resources list 
+    /// Get the Terraform resources list 
     /// then send it back to the client
     fn doom_list(&self, stream: &mut UnixStream) {
         let resources = self.tf_state_list();

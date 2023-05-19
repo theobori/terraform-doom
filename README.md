@@ -10,7 +10,7 @@ Technically, you could run this project outside a Docker container but the proje
 
 ## ℹ️ Usage
 
-An example with the Terraform project in `./test`. Feel free to **`terraform apply`** before or after running the Docker container, both will work.
+An example with the Terraform project in `./test`. Feel free to **`terraform apply`** before or after running the Docker container, both will work. This is a special case using the `local` Terraform provider with files, if you want them to get deleted, you must bind a volume into the Docker container. Otherwise it will work, but only the Terraform resources are going to be destroyed.
 
 The Terraform project directory must be bound at `/tf` inside the container (like below).
 
@@ -21,13 +21,23 @@ docker run \
     --name tf-doom \
     -p 5900:5900 \
     -v $PWD/test:/tf \
-    b0thr34l/dockerdoom:1.0
+    b0thr34l/dockerdoom:2.0
 ```
 
 Now you can play DOOM through a VNC client. Example with `vnclient`:
 
 ```bash
 vncviewer viewer localhost:5900
+```
+
+The default password is `1234`.
+
+You can change it by building the image yourself:
+
+```bash
+docker build .\
+    -t tf-doom \
+    --build-arg VNC_PASSWORD=custom_password
 ```
 
 ## 🔎 Cheat codes
