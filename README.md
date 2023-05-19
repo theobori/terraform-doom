@@ -4,7 +4,7 @@ Entertaining Terraform chaos engineering, destroy resource by killing DOOM ennem
 
 This is a Rust fork of [kubedoom](https://github.com/storax/kubedoom), forked from [dockerdoom](https://github.com/gideonred/dockerdoom), forked from  **`psdoom`**. 
 
-Technically, you could run this project outside a Docker container but the project was especially designed to run in one
+Technically, you could run this project outside a Docker container but this was especially designed to run in one
 
 ![In game](./assets/in-game.png)
 
