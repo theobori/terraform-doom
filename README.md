@@ -21,7 +21,7 @@ docker run \
     --name tf-doom \
     -p 5900:5900 \
     -v $PWD/test:/tf \
-    b0thr34l/dockerdoom:2.0
+    b0thr34l/tf-doom:1.0
 ```
 
 Now you can play DOOM through a VNC client. Example with `vnclient`:
