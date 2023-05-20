@@ -1,6 +1,6 @@
 # ❤️‍🔥 tf-doom
 
-Entertaining Terraform chaos engineering, destroy resource by killing DOOM ennemies.
+Entertaining Terraform chaos engineering, destroy resource by killing DOOM enemies.
 
 This is a Rust fork of [kubedoom](https://github.com/storax/kubedoom), forked from [dockerdoom](https://github.com/gideonred/dockerdoom), forked from  **`psdoom`**. 
 
@@ -21,7 +21,7 @@ docker run \
     --name tf-doom \
     -p 5900:5900 \
     -v $PWD/test:/tf \
-    b0thr34l/tf-doom:1.0
+    b0thr34l/tf-doom:2.0
 ```
 
 Now you can play DOOM through a VNC client. Example with `vnclient`:

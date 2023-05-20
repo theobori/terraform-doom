@@ -84,10 +84,9 @@ impl TfDoom {
             self.base,
             name
         );
-        let mut command = shell(cmd);
 
-        command
-            .execute()
+        shell(cmd)
+            .spawn()
             .expect("Unable to run terraform destroy");
     }
 
