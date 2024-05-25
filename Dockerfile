@@ -1,4 +1,4 @@
-FROM rust:latest AS build-tf-doom
+FROM rust:1.65-buster AS build-terraform-doom
 
 ENV DIRNAME tfdoom
 
@@ -7,11 +7,13 @@ WORKDIR ${DIRNAME}
 COPY . .
 
 RUN cargo build --release
-RUN mv target/release/tf-doom /
+RUN mv target/release/terraform-doom /
 
 RUN rm -rf /${DIRNAME}
 
 FROM ubuntu:20.04 AS build-doom
+
+ARG TERRAFORM_VERSION=1.4.6
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -26,7 +28,7 @@ RUN apt-get update -y && \
     wget
 
 # Installing Terraform
-RUN wget --quiet -O terraform.zip https://releases.hashicorp.com/terraform/1.4.6/terraform_1.4.6_linux_amd64.zip \
+RUN wget --quiet -O terraform.zip https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
     && unzip terraform.zip \
     && mv terraform /usr/bin \
     && rm terraform.zip
@@ -55,11 +57,11 @@ RUN apt-get update -y && \
 COPY --from=build-doom /doom1.wad /
 COPY --from=build-doom /usr/local/games/psdoom /usr/local/games
 COPY --from=build-doom /usr/bin/terraform /usr/bin
-COPY --from=build-tf-doom /tf-doom /usr/bin
+COPY --from=build-terraform-doom /terraform-doom /usr/bin
 
 # Setup a VNC password
-RUN mkdir /tf && \
+RUN mkdir /terraform && \
     mkdir ~/.vnc && \
     x11vnc -storepasswd ${VNC_PASSWORD} ~/.vnc/passwd
 
-ENTRYPOINT [ "/usr/bin/tf-doom" ]
+ENTRYPOINT [ "/usr/bin/terraform-doom" ]

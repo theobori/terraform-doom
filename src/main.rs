@@ -8,21 +8,21 @@ use std::process::Stdio;
 
 use execute::{Execute, shell};
 
-pub const TF_PREFIX: &str = "TF_";
-pub const CHDIR: &str = "/tf";
+pub const TERRAFORM_PREFIX: &str = "TF_";
+pub const CHDIR: &str = "/terraform";
 pub const SOCKET_PATH: &str = "/dockerdoom.socket";
 
 /// Terraform DOOM controller
 /// 
 /// Used communicate with the UNIX socket
-pub struct TfDoom {
+pub struct TerraformDoom {
     /// Terraform commmon/base command expr
     base: String,
     /// UNIX listener
     stream: UnixListener
 }
 
-impl TfDoom {
+impl TerraformDoom {
     pub fn new<T: AsRef<Path>>(base: &str, socket_path: T) -> Self {
         let socket = socket_path.as_ref();
     
@@ -39,7 +39,7 @@ impl TfDoom {
     }
 
     /// Returns every resource in the Terraform project
-    pub fn tf_state_list(&self) -> Vec<String> {
+    pub fn terraform_state_list(&self) -> Vec<String> {
         let cmd = format!(
             "{} state list",
             self.base
@@ -77,7 +77,7 @@ impl TfDoom {
     }
 
     /// Destroy a Terraform resource
-    pub fn tf_destroy(&self, name: &str) {
+    pub fn terraform_destroy(&self, name: &str) {
         let name = name.replace("\'", "\\\"");
         let cmd = format!(
             "{} destroy -auto-approve -target {}",
@@ -93,7 +93,7 @@ impl TfDoom {
     /// Get the Terraform resources list 
     /// then send it back to the client
     fn doom_list(&self, stream: &mut UnixStream) {
-        let resources = self.tf_state_list();
+        let resources = self.terraform_state_list();
 
         for resource in resources {
             stream
@@ -113,7 +113,7 @@ impl TfDoom {
 
     /// Destroy a Terraform resource identified by `name`
     fn doom_kill(&self, name: &str) {
-        self.tf_destroy(name);
+        self.terraform_destroy(name);
     }
 
     /// Handle a client connection
@@ -174,16 +174,16 @@ impl TfDoom {
 /// Returns the base command for terraform operations
 fn base_command() -> String {
     // Terraform environment vars
-    let tf_vars: Vec<String> = env::vars()
-        .filter(| (k, _) | k.starts_with(TF_PREFIX))
+    let terraform_vars: Vec<String> = env::vars()
+        .filter(| (k, _) | k.starts_with(TERRAFORM_PREFIX))
         .map(| (k, v) | format!("{}={}", k, v))
         .collect();
 
     let chdir = format!("-chdir={}", CHDIR);
     let mut base = String::new();
     
-    if tf_vars.len() > 0 {
-        base.push_str(&tf_vars.join(" "));
+    if terraform_vars.len() > 0 {
+        base.push_str(&terraform_vars.join(" "));
         base.push(' ');
     }
 
@@ -196,7 +196,7 @@ fn base_command() -> String {
 fn main() -> Result<(), Error> {
     let base = base_command();
 
-    let mut tfdoom = TfDoom::new(&base, SOCKET_PATH);
+    let mut terraform_doom = TerraformDoom::new(&base, SOCKET_PATH);
 
     shell("/usr/bin/Xvfb :99 -ac -screen 0 640x480x24")
         .spawn()
@@ -212,7 +212,7 @@ fn main() -> Result<(), Error> {
         .spawn()
         .expect("Run DOOM");
 
-    tfdoom.send_resources();
+        terraform_doom.send_resources();
 
     Ok(())
 }
