@@ -10,7 +10,7 @@ Technically, you could run this project outside a Docker container but this was 
 
 ## ℹ️ Usage
 
-An example with the Terraform project in `./test`. Feel free to **`terraform apply`** before or after running the Docker container, both will work. This is a special case using the `local` Terraform provider with files, if you want them to get deleted, you must bind a volume into the Docker container. Otherwise it will work, but only the Terraform resources are going to be destroyed.
+An example with the Terraform project in `./examples`. Feel free to **`terraform apply`** before or after running the Docker container, both will work. This is a special case using the `local` Terraform provider with files, if you want them to get deleted, you must bind a volume into the Docker container. Otherwise it will work, but only the Terraform resources are going to be destroyed.
 
 The Terraform project directory must be bound at `/terraform` inside the container (like below).
 
@@ -20,7 +20,7 @@ docker run \
     --rm=true \
     --name terraform-doom \
     -p 5900:5900 \
-    -v $PWD/test:/terraform \
+    -v $PWD/examples:/terraform \
     b0thr34l/terraform-doom:1.0
 ```
 
